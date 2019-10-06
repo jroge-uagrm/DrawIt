@@ -6,12 +6,14 @@ public class Constants {
     static final String TXT_SAVE = "Guardar";
     static final String TXT_CANCEL = "Cancelar";
     /*This section is used to showed messages*/
-    static final String SHOW_MSGTOOPEN = "Mi dibujo se llamaba...";
-    static final String SHOW_OPENED = "Abierto! :D";
-    static final String SHOW_MSGTOSAVE = "Guardar dibujo con el nombre...";
-    static final String SHOW_SAVED = "Guardado! :D";
-    static final String SHOW_EMPTYCONTENT = "Nada para guardar! :o";
-    static final String SHOW_USEDNAME = "Nombre ya usado! :c";
+    static final String SHOW_MSGTOOPEN = "My drawing was called...";
+    static final String SHOW_OPENED = "Successfully opened! :D";
+    static final String SHOW_DRAWNOTEXIST= "The drawing does not exist! :c";
+    static final String SHOW_MSGTOSAVE = "Save with name...";
+    static final String SHOW_SAVED = "Successfully saved! :D";
+    static final String SHOW_EMPTYDRAW = "You did not draw anything! :o";
+    static final String SHOW_USEDNAME = "The name is already used! :c";
+    static final String SHOW_READYTOSTART= "Draw It! :D";
     static final String SHOW_UPS = "Ups!";
     /*This section is used to internal messages*/
     static final String INTERNAL_OK = "OK";

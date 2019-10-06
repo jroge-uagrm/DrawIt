@@ -11,5 +11,6 @@
     <string name="txtNewDraw">New</string>
     <string name="txtOpenDraw">Open</string>
     <string name="txtSaveDraw">Save</string>
-    <string name="txtPrintDraw">Print</string>
+    <string name="txtPrintDraw">Print...</string>
+    <string name="dispositivos_vinculados">Dispositivos Vinculados</string>
 </resources>

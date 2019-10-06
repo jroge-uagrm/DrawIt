@@ -1,28 +1,41 @@
 package com.jriz.drawit;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.text.InputType;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
 import com.jriz.drawit.Structure.Object;
 import com.jriz.drawit.Structure.Point;
 import com.jriz.drawit.Structure.Polygon;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 class Controller implements Runnable {
 
+    private static final String TAG="myView";
+    private AppCompatActivity appCompactActivity;
     private Thread thread;
     private boolean isItOk;
     private MyView myView;
     private int W, H;
-    private Point actualPoint, oldPoint;
+    private Point actualPoint;
     private String action;
     private double startTime;
     private Object object;
 
-    public Controller(Context context) {
+    Controller(Context context,AppCompatActivity newAppCompatActivity) {
         myView = new MyView(context);
         W = myView.getWidth();
         H = myView.getHeight();
@@ -30,15 +43,16 @@ class Controller implements Runnable {
         startTime = 0;
         thread = null;
         action = Constants.NULL;
-        oldPoint = actualPoint = null;
+        actualPoint = null;
+        appCompactActivity=newAppCompatActivity;
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    public void setOnTouchListener(View.OnTouchListener l) {
+    void setOnTouchListener(View.OnTouchListener l) {
         myView.setOnTouchListener(l);
     }
 
-    public MyView getView() {
+    MyView getView() {
 
         return this.myView;
     }
@@ -53,7 +67,7 @@ class Controller implements Runnable {
                 myView.setCanvas();
                 if (!action.equals(Constants.NEW)) {
                     if (action.equals(Constants.POINT)) {
-                        object.addPoint(convertir(actualPoint));
+                        object.addPoint(convert(actualPoint));
                     } else {
                         if (action.equals(Constants.CLOSED)) {
                             object.setClosedLastPolygon();
@@ -67,14 +81,13 @@ class Controller implements Runnable {
                     }
                 }
                 action = Constants.NULL;
-                dibujarObjeto();
+                drawObject();
                 myView.unlockCanvas();
             }
         }
     }
 
-    public void onTouch(MotionEvent e) {
-        oldPoint = actualPoint;
+    void onTouch(MotionEvent e) {
         actualPoint = new Point(e.getX(), e.getY());
         if (e.getAction() == MotionEvent.ACTION_DOWN) {
             action = Constants.POINT;
@@ -93,7 +106,7 @@ class Controller implements Runnable {
         myView.invalidate();
     }
 
-    private void dibujarObjeto() {
+    private void drawObject() {
         Point pointA, pointB;
         for (Polygon polygon : object.polygonList) {
             pointA = polygon.getPoint((byte) 0);
@@ -111,7 +124,7 @@ class Controller implements Runnable {
         }
     }
 
-    public void setNewObject(String objectJson) {
+    void setNewObject(String objectJson) {
         if (objectJson.equals(Constants.NULL)) {
             object = new Object();
         } else {
@@ -121,12 +134,12 @@ class Controller implements Runnable {
         action = Constants.NEW;
     }
 
-    public Object getObject() {
+    private Object getObject() {
         return this.object;
 
     }
 
-    private Point convertir(Point newActPoint) {
+    private Point convert(Point newActPoint) {
 //        float newX = (((newActPoint.x * 100) / W) - 50) * 2;
 //        float newY = (((newActPoint.x * 100) / H) - 50) * (-2);
 //        act = new Point(newX, newY);
@@ -136,11 +149,11 @@ class Controller implements Runnable {
         return newActPoint;
     }
 
-    public boolean isEmpty() {
+    private boolean isEmpty() {
         return this.object.isEmpty();
     }
 
-    public void pause() {
+    void pause() {
         isItOk = false;
         while (true) {
             try {
@@ -153,26 +166,141 @@ class Controller implements Runnable {
         thread = null;
     }
 
-    public void resume() {
+    void resume() {
         isItOk = true;
         thread = new Thread(this);
         thread.start();
     }
 
-    public void onOptionsItemSelected(MenuItem menu) {
+    void onOptionsItemSelected(MenuItem menu) {
         switch (menu.getItemId()) {
             case R.id.newDraw:
                 setNewObject(Constants.NULL);
-                break;
-            case R.id.openDraw:
-                 
+                showLongMessage(Constants.SHOW_READYTOSTART);
                 break;
             case R.id.saveDraw:
+                saveDraw();
+                break;
+            case R.id.openDraw:
+                openDraw();
                 break;
             case R.id.printDraw:
+                printDraw();
                 break;
             default:
+                showLongMessage(Constants.SHOW_UPS);
                 break;
         }
+    }
+
+    private void saveDraw() {
+        if (isEmpty()) {
+            showLongMessage(Constants.SHOW_EMPTYDRAW);
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(myView.getContext());
+            builder.setTitle(Constants.SHOW_MSGTOSAVE);
+            final EditText input = new EditText(myView.getContext());
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            builder.setView(input);
+            builder.setPositiveButton(Constants.TXT_SAVE, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    String fileName = input.getText().toString();
+                    String result = tryToOpenFile(fileName);
+                    if (result.equals(Constants.INTERNAL_FAILEDTOOPEN)) {
+                        result = tryToSaveFile(fileName, toJson(getObject()));
+                        if (result.equals(Constants.INTERNAL_FAILEDTOSAVE))
+                            showLongMessage(Constants.SHOW_UPS);
+                        else
+                            showShortMessage(Constants.SHOW_SAVED);
+                    } else
+                        showLongMessage(Constants.SHOW_USEDNAME);
+                }
+            });
+            builder.setNegativeButton(Constants.TXT_CANCEL, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                }
+            });
+            builder.show();
+        }
+    }
+
+    private String tryToSaveFile(String fileName, String contentFile) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
+                appCompactActivity.openFileOutput(fileName + Constants.INTERNAL_DOTTXT, Context.MODE_APPEND)
+            );
+            outputStreamWriter.write(contentFile);
+            outputStreamWriter.close();
+            return Constants.INTERNAL_OK;
+        } catch (Exception e) {
+            return Constants.INTERNAL_FAILEDTOSAVE;
+        }
+
+    }
+
+    private void openDraw() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(myView.getContext());
+        builder.setTitle(Constants.SHOW_MSGTOOPEN);
+        final EditText input = new EditText(myView.getContext());
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+        builder.setPositiveButton(Constants.TXT_OPEN, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String paintName = input.getText().toString();
+                String resultAfterOpen = tryToOpenFile(paintName);
+                if (resultAfterOpen.equals(Constants.INTERNAL_FAILEDTOOPEN))
+                    showLongMessage(Constants.SHOW_DRAWNOTEXIST);
+                else {
+                    setNewObject(resultAfterOpen);
+                    showShortMessage(Constants.SHOW_OPENED);
+                }
+            }
+        });
+        builder.setNegativeButton(Constants.TXT_CANCEL, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        builder.show();
+    }
+
+    private String tryToOpenFile(String fileName) {
+        try {
+            BufferedReader bufferedReader = new BufferedReader(
+                    new InputStreamReader(
+                            appCompactActivity.openFileInput(fileName + ".txt")
+                    )
+            );
+            return bufferedReader.readLine();
+        } catch (Exception e) {
+            return Constants.INTERNAL_FAILEDTOOPEN;
+        }
+    }
+
+    private void printDraw() {
+        if (isEmpty()) {
+            showLongMessage(Constants.SHOW_EMPTYDRAW);
+        } else {
+            Intent intent = new Intent(myView.getContext(), BluetoothDevices.class);
+            appCompactActivity.startActivity(intent);
+        }
+    }
+
+    private String toJson(Object object) {
+        Gson gson = new Gson();
+        return gson.toJson(object);
+    }
+
+    private void showShortMessage(String msg) {
+        Toast.makeText(myView.getContext(), msg, Toast.LENGTH_SHORT).show();
+    }
+
+    private void showLongMessage(String msg) {
+        Toast.makeText(myView.getContext(), msg, Toast.LENGTH_LONG).show();
     }
 }

@@ -7,7 +7,11 @@ import android.graphics.Paint;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.jriz.drawit.Structure.Point;
+
+import java.io.OutputStream;
 
 public class MyView extends SurfaceView {
 
@@ -26,7 +30,7 @@ public class MyView extends SurfaceView {
 
     public void setCanvas() {
         canvas = surfaceHolder.lockCanvas();
-        canvas.drawARGB(255, 255,255, 255);
+        canvas.drawARGB(255, 255, 255, 255);
     }
 
     public void drawLine(Point A, Point B) {
@@ -36,7 +40,9 @@ public class MyView extends SurfaceView {
     public boolean isValid() {
         return surfaceHolder.getSurface().isValid();
     }
-    public void unlockCanvas(){
+
+    public void unlockCanvas() {
         surfaceHolder.unlockCanvasAndPost(canvas);
     }
+
 }
