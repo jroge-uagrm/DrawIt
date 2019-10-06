@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name"> DrawIt!</string>
+    <string name="txtDraw"> Draw</string>
+    <string name="txtDrawIt"> Draw it!</string>
+    <string name="txtHowToDraw"> How to draw?</string>
+    <string name="txtCreateAPoint"> Touch to make a point</string>
+    <string name="txtCreateALine"> Two points make a line</string>
+    <string name="txtCreateAPolygon"> A lot of lines make a polygon</string>
+    <string name="txtCreateAOpenPolygon"> Double touch where you want to finish a polygon</string>
+    <string name="txtCreateAClosedPolygon"> Hold down where you want to finish a closed polygon</string>
+    <string name="txtNewDraw">New</string>
+    <string name="txtOpenDraw">Open</string>
+    <string name="txtSaveDraw">Save</string>
+    <string name="txtPrintDraw">Print</string>
+</resources>
