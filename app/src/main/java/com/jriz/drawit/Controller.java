@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.text.InputType;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.view.Display;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,13 +21,14 @@ import com.google.gson.Gson;
 import com.jriz.drawit.Structure.Object;
 import com.jriz.drawit.Structure.Point;
 import com.jriz.drawit.Structure.Polygon;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 class Controller implements Runnable {
 
-    private static final String TAG="myView";
+    private static final String TAG = "myView";
     private AppCompatActivity appCompactActivity;
     private Thread thread;
     private boolean isItOk;
@@ -34,18 +38,19 @@ class Controller implements Runnable {
     private String action;
     private double startTime;
     private Object object;
-    private Point act,ant;
+    private Point act, ant;
 
-    Controller(Context context,AppCompatActivity newAppCompatActivity) {
+    Controller(Context context, AppCompatActivity newAppCompatActivity) {
         myView = new MyView(context);
-        W = myView.getWidth();
-        H = myView.getHeight();
+        DisplayMetrics d = myView.getResources().getDisplayMetrics();
+        W=d.widthPixels;
+        H=d.heightPixels;
         object = new Object();
         startTime = 0;
         thread = null;
         action = Constants.NULL;
         actualPoint = null;
-        appCompactActivity=newAppCompatActivity;
+        appCompactActivity = newAppCompatActivity;
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -61,14 +66,17 @@ class Controller implements Runnable {
     @Override
     public void run() {
         while (isItOk) {
-            if (!myView.isValid()){
+            if (!myView.isValid()) {
                 continue;
             }
             if (!action.equals(Constants.NULL)) {
                 myView.setCanvas();
                 if (!action.equals(Constants.NEW)) {
                     if (action.equals(Constants.POINT)) {
-                        object.addPoint(actualPoint);
+//                        Log.d("PUNTO",actualPoint.toString());
+                        Point correctPoint = convert(actualPoint);
+                        object.addPoint(correctPoint);
+//                        Log.d("PUNTO",correctPoint.toString());
                     } else {
                         if (action.equals(Constants.CLOSED)) {
                             object.setClosedLastPolygon();
@@ -109,11 +117,13 @@ class Controller implements Runnable {
 
     private void drawObject() {
         Point pointA, pointB;
+        ant = new Point(0, 0);
         for (Polygon polygon : object.polygonList) {
-            pointA = polygon.getPoint((byte) 0);
+            pointA = deconvert(polygon.getPoint((byte) 0));
             if (polygon.pointList.size() > 1) {
-                for (int i = 1; i < polygon.pointList.size(); i++) {
-                    pointB = polygon.getPoint((byte) i);
+                for (int i = 1; i <= polygon.pointList.size() - 1; i++) {
+                    pointB = deconvert(polygon.getPoint((byte) i));
+                    //Log.d("PUNTOS",pointA.toString()+"|"+pointB.toString());
                     myView.drawLine(pointA, pointB);
                     pointA = pointB;
                 }
@@ -125,6 +135,23 @@ class Controller implements Runnable {
         }
     }
 
+    private Point convert(Point newActPoint) {
+        float newX = (((newActPoint.x * (float) 100) / W) - (float) 50) * (float) 2;
+        float newY = (((newActPoint.y * (float) 100) / H) - (float) 50) * (float) (-2);
+        act = new Point(newX, newY);
+        Point p = new Point(act.x - ant.x, act.y - ant.y);
+        ant = act;
+        return p;
+    }
+
+    private Point deconvert(Point newActPoint) {
+        Point p = new Point(newActPoint.x + ant.x, newActPoint.y + ant.y);
+        ant = p;
+        float newX = (float) ((int) ((((p.x / (float) 2) + (float) 50) * (float) (W)) / (float) 100));
+        float newY = (float) ((int) ((((p.y / (float) (-2)) + (float) 50) * (float) (H)) / (float) 100));
+        return new Point(newX, newY);
+    }
+
     void setNewObject(String objectJson) {
         if (objectJson.equals(Constants.NULL)) {
             object = new Object();
@@ -133,7 +160,7 @@ class Controller implements Runnable {
             this.object = gson.fromJson(objectJson, Object.class);
         }
         action = Constants.NEW;
-        ant=new Point(0,0);
+        ant = new Point(0, 0);
     }
 
     private Object getObject() {
@@ -223,7 +250,7 @@ class Controller implements Runnable {
     private String tryToSaveFile(String fileName, String contentFile) {
         try {
             OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
-                appCompactActivity.openFileOutput(fileName + Constants.INTERNAL_DOTTXT, Context.MODE_APPEND)
+                    appCompactActivity.openFileOutput(fileName + Constants.INTERNAL_DOTTXT, Context.MODE_APPEND)
             );
             outputStreamWriter.write(contentFile);
             outputStreamWriter.close();
@@ -282,7 +309,7 @@ class Controller implements Runnable {
             object.finishPolygon();
             Intent intent = new Intent(myView.getContext(), BluetoothDevices.class);
             String json_object = toJson(object);
-            intent.putExtra("objetojson",json_object);
+            intent.putExtra("objetojson", json_object);
             appCompactActivity.startActivity(intent);
         }
     }

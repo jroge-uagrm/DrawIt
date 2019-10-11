@@ -34,8 +34,9 @@ public class ConnectedToDevice extends AppCompatActivity {
     private StringBuilder DataStringIN;
     private ConnectedThread myConnectionBT;
     private UUID BTMODULEUUID;
-    private int handlerState;
+    private int handlerState, W, H, index;
     private Object object;
+    private Point act, ant;
     private boolean imprimiendo;
     private LinkedList<String> tramaList;
 
@@ -51,13 +52,16 @@ public class ConnectedToDevice extends AppCompatActivity {
         btnDisconnect = findViewById(R.id.disconnect);
         btAdapter = BluetoothAdapter.getDefaultAdapter();
         VerificarEstadoBT();
+        W = 1100;
+        H = 1500;
+        ant = new Point(0, 0);
         btnPrint.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                btnPrint.setEnabled(false);
                 setNewObject(Objects.requireNonNull(getIntent().getExtras().getString("objetojsonb")));
-                startPrint();
-                btnPrint.setEnabled(true);
+                deconvertAllObject();
+                getTramaList();
+                sendMessage("i");
             }
         });
         btnDisconnect.setOnClickListener(new View.OnClickListener() {
@@ -68,14 +72,18 @@ public class ConnectedToDevice extends AppCompatActivity {
                         btSocket.close();
                     } catch (IOException e) {
                         Toast.makeText(getBaseContext(), "Error", Toast.LENGTH_SHORT).show();
-                        ;
                     }
                 }
                 finish();
             }
         });
     }
-    void startPrint() {
+
+    private void sendMessage(String msg) {
+        myConnectionBT.write(msg + "#");
+    }
+
+    void getTramaList() {
         tramaList = new LinkedList<String>();
         String trama = "";
         int pointCount;
@@ -104,21 +112,55 @@ public class ConnectedToDevice extends AppCompatActivity {
             }
             tramaList.add(trama);
         }
-        String cadena="";
-        for(String t:tramaList){
-            cadena+=t+"|";
+        String cadena = "";
+        for (String t : tramaList) {
+            cadena += t + "|";
         }
-        Log.d("TAG","INICIO"+cadena+"FIN");
+        Log.d("TAG", "INICIO" + cadena + "FIN");
+    }
+
+    private void deconvertAllObject() {
+        Object object2 = new Object();
+        ant = new Point(0, 0);
+        for (Polygon polygon : object.polygonList) {
+            for (Point point : polygon.pointList) {
+                object2.addPoint(deconvert(point));
+            }
+            object2.finishPolygon();
+        }
+        ant = new Point(0, 0);
+        Object object3 = new Object();
+        for (Polygon polygon : object2.polygonList) {
+            for (Point point : polygon.pointList) {
+                object3.addPoint(convertToPlotter(point));
+            }
+            object3.finishPolygon();
+        }
+        object = object3;
     }
 
     private Point convert(Point newActPoint) {
-//        float newX = (((newActPoint.x * 100) / W) - 50) * 2;
-//        float newY = (((newActPoint.x * 100) / H) - 50) * (-2);
-//        act = new Point(newX, newY);
-//        Point p = new Point(act.x - ant.x, act.y - ant.y);
-//        ant = act;
-//        //return p;
-        return newActPoint;
+        float newX = (((newActPoint.x * (float) 100) / W) - (float) 50) * (float) 2;
+        float newY = (((newActPoint.y * (float) 100) / H) - (float) 50) * (float) (-2);
+        act = new Point(newX, newY);
+        Point p = new Point(act.x - ant.x, act.y - ant.y);
+        ant = act;
+        return p;
+    }
+
+    private Point deconvert(Point newActPoint) {
+        Point p = new Point(newActPoint.x + ant.x, newActPoint.y + ant.y);
+        ant = p;
+        float newX = (float) ((int) ((((p.x / (float) 2) + (float) 50) * (float) (W)) / (float) 100));
+        float newY = (float) ((int) ((((p.y / (float) (-2)) + (float) 50) * (float) (H)) / (float) 100));
+        return new Point(newX, newY);
+    }
+
+    private Point convertToPlotter(Point newActPoint) {
+        act = newActPoint;
+        Point p = new Point(act.x - ant.x, act.y - ant.y);
+        ant = act;
+        return p;
     }
 
     void setNewObject(String objectJson) {
@@ -167,9 +209,19 @@ public class ConnectedToDevice extends AppCompatActivity {
                                 imprimiendo = false;
                                 String dataInPrint = DataStringIN.substring(0, endOfLineIndex);
                                 DataStringIN.delete(0, DataStringIN.length());
-                                Toast.makeText(ConnectedToDevice.this, Boolean.toString(imprimiendo), Toast.LENGTH_SHORT).show();
+//                                Toast.makeText(ConnectedToDevice.this, Boolean.toString(imprimiendo), Toast.LENGTH_SHORT).show();
                                 if (dataInPrint.contains(",")) {
-                                    //poner ancho y alto
+                                    Toast.makeText(ConnectedToDevice.this, "Dimentions", Toast.LENGTH_SHORT).show();
+                                    index = 0;
+                                    ConnectedToDevice.this.sendMessage(tramaList.get(index));
+                                } else if (dataInPrint.equals("finish")) {
+                                    index++;
+                                    Toast.makeText(ConnectedToDevice.this, "OK", Toast.LENGTH_SHORT).show();
+                                    if (index < tramaList.size()) {
+                                        ConnectedToDevice.this.sendMessage(tramaList.get(index));
+                                    }else{
+                                        Toast.makeText(ConnectedToDevice.this, "OK", Toast.LENGTH_SHORT).show();
+                                    }
                                 }
                             }
                         }
