@@ -34,6 +34,7 @@ class Controller implements Runnable {
     private String action;
     private double startTime;
     private Object object;
+    private Point act,ant;
 
     Controller(Context context,AppCompatActivity newAppCompatActivity) {
         myView = new MyView(context);
@@ -60,14 +61,14 @@ class Controller implements Runnable {
     @Override
     public void run() {
         while (isItOk) {
-            if (!myView.isValid()) {
+            if (!myView.isValid()){
                 continue;
             }
             if (!action.equals(Constants.NULL)) {
                 myView.setCanvas();
                 if (!action.equals(Constants.NEW)) {
                     if (action.equals(Constants.POINT)) {
-                        object.addPoint(convert(actualPoint));
+                        object.addPoint(actualPoint);
                     } else {
                         if (action.equals(Constants.CLOSED)) {
                             object.setClosedLastPolygon();
@@ -132,21 +133,12 @@ class Controller implements Runnable {
             this.object = gson.fromJson(objectJson, Object.class);
         }
         action = Constants.NEW;
+        ant=new Point(0,0);
     }
 
     private Object getObject() {
         return this.object;
 
-    }
-
-    private Point convert(Point newActPoint) {
-//        float newX = (((newActPoint.x * 100) / W) - 50) * 2;
-//        float newY = (((newActPoint.x * 100) / H) - 50) * (-2);
-//        act = new Point(newX, newY);
-//        Point p = new Point(act.x - ant.x, act.y - ant.y);
-//        ant = act;
-//        //return p;
-        return newActPoint;
     }
 
     private boolean isEmpty() {
@@ -170,6 +162,7 @@ class Controller implements Runnable {
         isItOk = true;
         thread = new Thread(this);
         thread.start();
+        drawObject();
     }
 
     void onOptionsItemSelected(MenuItem menu) {
@@ -286,7 +279,10 @@ class Controller implements Runnable {
         if (isEmpty()) {
             showLongMessage(Constants.SHOW_EMPTYDRAW);
         } else {
+            object.finishPolygon();
             Intent intent = new Intent(myView.getContext(), BluetoothDevices.class);
+            String json_object = toJson(object);
+            intent.putExtra("objetojson",json_object);
             appCompactActivity.startActivity(intent);
         }
     }

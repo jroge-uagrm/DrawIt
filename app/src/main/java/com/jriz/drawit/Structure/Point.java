@@ -8,4 +8,8 @@ public class Point {
         this.x=x;
         this.y=y;
     }
+    @Override
+    public String toString(){
+        return Integer.toString((int)x)+","+Integer.toString((int)y);
+    }
 }

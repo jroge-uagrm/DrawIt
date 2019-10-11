@@ -23,7 +23,7 @@ public class Polygon {
     public Point getFirstPoint(){
         return this.getPoint((byte)0);
     }
-    public Point getPoint(byte index){
+    public Point getPoint(int index){
         return this.pointList.get(index);
     }
     public Point getLastPoint(){

@@ -31,6 +31,10 @@ public class Object {
             this.polygonList.getLast().addPoint(newPoint);
         }
     }
+
+    public Polygon getPolygon(int index){
+        return polygonList.get(index);
+    }
     //Usado para borrar una linea
     public void removeLastPoint(){
         if(polygonList.size()>0) {

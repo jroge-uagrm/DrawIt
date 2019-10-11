@@ -13,4 +13,9 @@
     <string name="txtSaveDraw">Save</string>
     <string name="txtPrintDraw">Print...</string>
     <string name="dispositivos_vinculados">Dispositivos Vinculados</string>
+    <string name="bluetooth_devices">Bluetooth devices</string>
+    <string name="send_message">Send message</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="buffer_in">Buffer In:</string>
+    <string name="print">PRINT</string>
 </resources>
