@@ -4,20 +4,14 @@ import java.util.LinkedList;
 public class Polygon {
 
     public LinkedList<Point> pointList;
-    public boolean isClosedPolygon;
 
-    public Polygon(boolean isClosedPolygon) {
+    Polygon() {
         this.pointList = new LinkedList<>();
-        this.isClosedPolygon = isClosedPolygon;
     }
-    public Polygon(LinkedList<Point> pointList, boolean isClosedPolygon){
-        this.pointList =pointList;
-        this.isClosedPolygon =isClosedPolygon;
+    void setClosed(){
+        addPoint(this.getFirstPoint());
     }
-    public void setClosed(){
-        isClosedPolygon=true;
-    }
-    public void addPoint(Point newPoint){
+    void addPoint(Point newPoint){
         this.pointList.add(newPoint);
     }
     public Point getFirstPoint(){
@@ -26,13 +20,7 @@ public class Polygon {
     public Point getPoint(int index){
         return this.pointList.get(index);
     }
-    public Point getLastPoint(){
-        return getPoint((byte)(this.pointList.size()-1));
-    }
-    public void removeFirstPoint(){
-        this.pointList.removeFirst();
-    }
-    public void removeLastPoint(){
+    void removeLastPoint(){
         this.pointList.removeLast();
     }
 }

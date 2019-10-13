@@ -127,10 +127,6 @@ class Controller implements Runnable {
                     myView.drawLine(pointA, pointB);
                     pointA = pointB;
                 }
-                if (polygon.isClosedPolygon) {
-                    pointB = polygon.getFirstPoint();
-                    myView.drawLine(pointA, pointB);
-                }
             }
         }
     }

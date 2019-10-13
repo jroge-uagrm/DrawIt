@@ -28,5 +28,5 @@ public class Constants {
     static final String OPEN = "open";
     static final double TIME_HOLD_DOWN= 500;
     static final double TIME_TOUCHES= 200;
-    public static final int DISTANCE_TOUCHES= 30;
+    public static final int DISTANCE_TOUCHES= 5;
 }

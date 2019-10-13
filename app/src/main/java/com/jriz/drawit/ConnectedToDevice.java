@@ -59,8 +59,6 @@ public class ConnectedToDevice extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 setNewObject(Objects.requireNonNull(getIntent().getExtras().getString("objetojsonb")));
-                deconvertAllObject();
-                getTramaList();
                 sendMessage("i");
             }
         });
@@ -87,10 +85,12 @@ public class ConnectedToDevice extends AppCompatActivity {
         tramaList = new LinkedList<String>();
         String trama = "";
         int pointCount;
+        Point startPoint=new Point(0,0);
         for (Polygon polygon : object.polygonList) {
             pointCount = 0;
             for (int j = 0; j <= polygon.pointList.size() - 1; j++) {
                 Point point = polygon.getPoint(j);
+                startPoint=new Point(startPoint.x+point.x,startPoint.y+point.y);
                 //First trama is to go at the start of the polygon
                 if (j == 0) {
                     trama = "l*" + point.toString();
@@ -112,6 +112,8 @@ public class ConnectedToDevice extends AppCompatActivity {
             }
             tramaList.add(trama);
         }
+        startPoint=new Point(startPoint.x*-1,startPoint.y*-1);
+        tramaList.add("l*"+startPoint.toString());
         String cadena = "";
         for (String t : tramaList) {
             cadena += t + "|";
@@ -206,22 +208,30 @@ public class ConnectedToDevice extends AppCompatActivity {
                             DataStringIN.append(readMessage);
                             int endOfLineIndex = DataStringIN.indexOf("#");
                             if (endOfLineIndex > 0) {
-                                imprimiendo = false;
                                 String dataInPrint = DataStringIN.substring(0, endOfLineIndex);
                                 DataStringIN.delete(0, DataStringIN.length());
-//                                Toast.makeText(ConnectedToDevice.this, Boolean.toString(imprimiendo), Toast.LENGTH_SHORT).show();
                                 if (dataInPrint.contains(",")) {
-                                    Toast.makeText(ConnectedToDevice.this, "Dimentions", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(ConnectedToDevice.this, "Dimentions: "+dataInPrint, Toast.LENGTH_SHORT).show();
+                                    int n = dataInPrint.indexOf(",");
+                                    String Width = dataInPrint.substring(0, n);
+                                    W=Integer.parseInt(Width);
+                                    String Height = dataInPrint.substring(n+1);
+                                    H=Integer.parseInt(Height);
+                                    deconvertAllObject();
+                                    getTramaList();
                                     index = 0;
                                     ConnectedToDevice.this.sendMessage(tramaList.get(index));
                                 } else if (dataInPrint.equals("finish")) {
                                     index++;
-                                    Toast.makeText(ConnectedToDevice.this, "OK", Toast.LENGTH_SHORT).show();
                                     if (index < tramaList.size()) {
+                                        Toast.makeText(ConnectedToDevice.this, tramaList.get(index), Toast.LENGTH_SHORT).show();
                                         ConnectedToDevice.this.sendMessage(tramaList.get(index));
                                     }else{
-                                        Toast.makeText(ConnectedToDevice.this, "OK", Toast.LENGTH_SHORT).show();
+                                        Toast.makeText(ConnectedToDevice.this, "Print Finalized! :D", Toast.LENGTH_SHORT).show();
                                     }
+                                }else{
+                                    Toast.makeText(ConnectedToDevice.this, "Re-sending: "+tramaList.get(index), Toast.LENGTH_SHORT).show();
+                                    ConnectedToDevice.this.sendMessage(tramaList.get(index));
                                 }
                             }
                         }

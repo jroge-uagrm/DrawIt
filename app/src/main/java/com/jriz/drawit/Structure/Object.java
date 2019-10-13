@@ -7,62 +7,51 @@ import java.util.LinkedList;
 public class Object {
 
     public LinkedList<Polygon>polygonList;
-    private boolean isFinishedPoligon;
+    private boolean isFinishedPolygon;
 
     public Object(){
         this.polygonList=new LinkedList<>();
-        this.isFinishedPoligon=true;
+        this.isFinishedPolygon =true;
     }
     private void addPolygon(Polygon newPolygon){
         this.polygonList.add(newPolygon);
     }
-    public void removeLastPolygon(){
-        this.removePolygon((byte)(this.polygonList.size()-1));
-    }
-    public void removePolygon(byte index){
-        this.polygonList.remove(index);
-    }
     public void addPoint(Point newPoint){
-        if(isFinishedPoligon){
-            this.addPolygon(new Polygon(false));
-            isFinishedPoligon=false;
+        if(isFinishedPolygon){
+            this.addPolygon(new Polygon());
+            isFinishedPolygon =false;
             addPoint(newPoint);
         }else{
             this.polygonList.getLast().addPoint(newPoint);
         }
     }
 
-    public Polygon getPolygon(int index){
-        return polygonList.get(index);
-    }
-    //Usado para borrar una linea
+    //Used to delete a line
     public void removeLastPoint(){
         if(polygonList.size()>0) {
             polygonList.getLast().removeLastPoint();
             if (polygonList.getLast().pointList.size() <= 1) {
                 polygonList.removeLast();
-                isFinishedPoligon = true;
+                isFinishedPolygon = true;
             } else {
-                isFinishedPoligon=false;
+                isFinishedPolygon =false;
             }
         }
     }
     public void finishPolygon(){
-        isFinishedPoligon=true;
+        isFinishedPolygon =true;
     }
     public void setClosedLastPolygon(){
         setClosedPolygon((byte)(polygonList.size()-1));
     }
-    public void setClosedPolygon(byte index){
+    private void setClosedPolygon(byte index){
         this.polygonList.get(index).setClosed();
     }
 
     public boolean distanceBetweenLastTwoPointIsShort() {
         Polygon auxPolygon=polygonList.getLast();
         Point pointA=auxPolygon.getPoint((byte) (auxPolygon.pointList.size()-1));
-        Point pointB=auxPolygon.getPoint((byte) (auxPolygon.pointList.size()-2));
-        return Math.abs(pointA.x - pointB.x)< Constants.DISTANCE_TOUCHES&&
-                Math.abs(pointA.y - pointB.y)< Constants.DISTANCE_TOUCHES;
+        return pointA.x<Constants.DISTANCE_TOUCHES&&pointA.y<Constants.DISTANCE_TOUCHES;
     }
     public boolean isEmpty(){
         return polygonList.size()==0;
